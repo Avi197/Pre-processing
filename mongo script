@@ -1,0 +1,147 @@
+mongorestore -d db_name -c collection_name /path/file.bson
+
+mongorestore -d news -c Vnn H:/Data/vnn/vnn.bson
+
+
+
+db.collection.aggregate(
+    [ 
+        { "$sort": { "_id": 1 } }, 
+        { "$group": { 
+            "_id": "$field", 
+            "doc": { "$first": "$$ROOT" } 
+        }}, 
+        { "$replaceRoot": { "newRoot": "$doc" } },
+        { "$out": "collection" }
+    ]
+
+)
+
+$sort : sort 1 is ascending
+		sort -1 is descending
+$group: group all data with condition below
+$group: _id: $field    group all data with field "field"
+$$ROOT: currently being processed document, in this case the document with duplicate record
+"doc": { "$first": "$$ROOT" }    write all first data from $$ROOT to doc 
+"$replaceRoot": { "newRoot": "$doc" }    change root to newRoot, or change currently being processed document to "doc"
+"$out": "collection" write to collection "collection", either overwrite or to new collection
+
+db.Vnn_copy.aggregate(
+    [ 
+        { "$sort": { "_id": 1 } }, 
+        { "$group": { 
+            "_id": "$id", 
+            "doc": { "$first": "$$ROOT" } 
+        }}, 
+        { "$replaceRoot": { "newRoot": "$doc" } },
+        { "$out": "vnnet_from_copy" }
+    ], 
+	{allowDiskUse:true}
+)
+
+# get all unique links
+db.Vnn.aggregate(
+    [ 
+        { "$sort": { "_id": 1 } }, 
+        { "$group": { 
+            "_id": "$link", 
+            "doc": { "$first": "$$ROOT" } 
+        }}, 
+        { "$replaceRoot": { "newRoot": "$doc" } },
+        { "$out": "vnnet" }
+    ], 
+	{allowDiskUse:true}
+
+)
+
+
+# get all duplicates
+db.thoi_su.aggregate(
+    {"$group" : { "_id": "$link", "count": { "$sum": 1 } } },
+    {"$match": {"_id" :{ "$ne" : null } , "count" : {"$gt": 1} } }, 
+    {"$project": {"name" : "$_id", "_id" : 0} }
+)
+
+db.Vnn.aggregate([
+    { 
+        "$group": { 
+            "_id": { "title": "$title", "lead": "$lead" }, 
+            "uniqueIds": { "$addToSet": "$_id" },
+            "count": { "$sum": 1 } 
+        }
+    }, 
+    { "$match": { "count": { "$gt": 1 } } }
+])
+
+
+db.thoi_su.aggregate(
+    [ 
+        { "$sort": { "_id": 1 } }, 
+        { "$group": { 
+            "_id": "$title", 
+            "doc": { "$first": "$$ROOT" } 
+        }}, 
+        { "$replaceRoot": { "newRoot": "$doc" } },
+        { "$out": "thoi_su_dup_test" }
+    ], 
+	{allowDiskUse:true}
+
+)
+
+# get thoi_su 
+db.Vnn.aggregate(
+	[
+		{ $match: { catename:"Thời sự" } },
+		{ $out: "thoi_su" } 
+	]
+	);
+
+db.thoi_su.aggregate(
+	[
+		{ "$sort": { "publishdate": 1 } },
+		{ $out: "thoi_su_sorted" } 
+	]
+	);
+	
+
+# formate datatime to ISOtime
+db.thoi_su_sorted.aggregate( [ {
+   $project: {
+      date: {
+         $dateFromString: {
+            dateString: '$publishdate',
+			format: "%d-%m-%Y"
+         }
+      }
+   }
+} ] )
+
+
+# remove all records without aid field
+db.Vnn.remove({
+	"aid": { "$exists": true }
+
+})
+
+
+db.thoi_su_sorted.aggregate([
+  { $addFields : { removed : { $split: ["$publishdate", "/"] }} },
+    { $addFields : { date : {$reduce: {
+       input: "$removed",
+       initialValue: "",
+       in: { $concat : ["$$value", "$$this", "-"] }
+     }
+   },  {$out: .... }
+ }}]);
+
+db.Vnn_copy.aggregate(
+    [ 
+        { "$group":  { "_id": "$id", "count": { "$sum": 1 } } }
+    ],  function(err, results) {
+            // Do something with the results
+        }
+)
+
+
+mongoexport --db=news_data --collection=thoi_su --type=csv --fields=title,lead,content --noHeaderLine --out=H:/Data/vnn_thoi_su.csv
+mongoexport --db=news_data --collection=thoi_su --type=json --fields=title,lead,content --out=H:/Data/vnn_thoi_su.json
