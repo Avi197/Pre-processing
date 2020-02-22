@@ -1,0 +1,3 @@
+VncoreNLP: https://github.com/vncorenlp/VnCoreNLP
+
+java -Xmx2g -jar VnCoreNLP-1.1.1.jar -fin "input file location" -fout "output file location"
