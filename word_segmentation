@@ -1,0 +1,27 @@
+from vncorenlp import VnCoreNLP
+import time
+# java -Xmx2g -jar /home/pham/vncorenlp/VnCoreNLP/VnCoreNLP-1.1.1.jar -fin
+# /home/pham/news_data/news_data_no_thanhnien -fout /home/pham/news_data/news_data_tokenized -annotators wseg
+vncorenlp_file = "E:\VnCoreNLP-master\VnCoreNLP-master\VnCoreNLP-1.1.1.jar"
+# df = pd.read_json('contents.json', lines=True)
+
+# vncorenlp -Xmx2g E:\VnCoreNLP-master\VnCoreNLP-master\VnCoreNLP-1.1.1.jar -p 9000 -a "wseg"
+
+
+count = 0
+with VnCoreNLP(address='http://127.0.0.1', port=9000) as vncorenlp:
+	with open('vnexpress_data', encoding='utf-8') as file:
+		with open('vnexpress_data_tokenized_1', 'w', encoding='utf-8') as out:
+			for line in file:
+				if line:
+					try:
+						word_seg = vncorenlp.tokenize(line)
+						if not line:
+							print('fucked here')
+					except:
+						time.sleep(5)
+					for sent in word_seg:
+						seg = ' '.join(sent)
+						out.writelines(seg + '\n')
+					print('done line ' + str(count))
+				count += 1
