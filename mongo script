@@ -143,5 +143,48 @@ db.Vnn_copy.aggregate(
 )
 
 
+db.Tuoitre.update(
+  {}, 
+  [{ $set: { description: { $trim: { input: "$description", chars: "TTCT - " } } } }],
+  { multi: true }
+)
+db.Tuoitre.update(
+  {}, 
+  [{ $set: { description: { $trim: { input: "$description", chars: "TTC - " } } } }],
+  { multi: true }
+)
+db.Tuoitre.update(
+  {}, 
+  [{ $set: { description: { $trim: { input: "$description", chars: "TT - " } } } }],
+  { multi: true }
+)
+db.Tuoitre.update(
+  {}, 
+  [{ $set: { description: { $trim: { input: "$description", chars: "TT (TP.HCM) - " } } } }],
+  { multi: true }
+)
+db.Tuoitre.update(
+  {}, 
+  [{ $set: { description: { $trim: { input: "$description", chars: "TTO- " } } } }],
+  { multi: true }
+)
+db.Tuoitre.update(
+  {}, 
+  [{ $set: { description: { $trim: { input: "$description", chars: "TT (Hà Nội) - " } } } }],
+  { multi: true }
+)
+db.Tuoitre.update(
+  {}, 
+  [{ $set: { description: { $trim: { input: "$description", chars: "TT (An Giang) - " } } } }],
+  { multi: true }
+)
+
+TTCT - 
+TTC - 
+TT - 
+TT (TP.HCM) - 
+TTO- 
+TT (Hà Nội) - 
+TT (An Giang) - 
 mongoexport --db=news_data --collection=thoi_su --type=csv --fields=title,lead,content --noHeaderLine --out=H:/Data/vnn_thoi_su.csv
 mongoexport --db=news_data --collection=thoi_su --type=json --fields=title,lead,content --out=H:/Data/vnn_thoi_su.json
